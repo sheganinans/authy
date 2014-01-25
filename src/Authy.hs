@@ -1,9 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+-- | Tiny API client for <https://www.authy.com Authy> two-factor authentication
 module Authy
     ( newUser
     , verify
-    , apiServer
+    , productionServer
     , sandboxServer
     ) where
 
@@ -17,11 +18,11 @@ import           Network.Curl.Opts     (CurlOption(..))
 
 -------------------------------------------------------------------------------
 
-apiServer, sandboxServer :: String
+productionServer, sandboxServer :: String
 -- | Production API server (<https://api.authy.com>).
-apiServer     = "https://api.authy.com"
+productionServer = "https://api.authy.com"
 -- | Sandbox API server (<http://sandbox-api.authy.com>). Great for automated testing.
-sandboxServer = "http://sandbox-api.authy.com"
+sandboxServer    = "http://sandbox-api.authy.com"
 
 
 -------------------------------------------------------------------------------
@@ -46,17 +47,17 @@ newUserResponseParser = withObject "new user response" $ \obj -> do
 -- | Enable two-factor authentication on a user.
 newUser
     :: String
-    -- ^ API server.
+    -- ^ API server URL
     -> String
-    -- ^ Private API key.
+    -- ^ API key
     -> String
-    -- ^ E-mail address.
+    -- ^ E-mail address
     -> String
-    -- ^ Cell phone. Used by the API to match the user.
+    -- ^ Cell phone. Used by the API to match the user
     -> Int
-    -- ^ Numeric calling country code of the country. Eg: 1 for the US. 91 for India. 54 for Mexico.
+    -- ^ Numeric calling country code of the country. E.g. 1 for the US, 91 for India, or 54 for Mexico
     -> IO (Either (String, [String]) Int)
-    -- ^ Either an error message or a user ID.
+    -- ^ Either an (error message, list of invalid parameters) pair or a user ID
 newUser server key email cellPhone countryCode =
     curlAeson newUserResponseParser "POST" (server ++ path)
         [CurlFailOnError False, CurlPostFields formData] noData
@@ -84,17 +85,17 @@ verifyResponseParser = withObject "VerifyResponse" $ \obj -> do
 -- | Verify a user token.
 verify
     :: String
-    -- ^ API server.
+    -- ^ API server URL
     -> String
-    -- ^ Private API key.
+    -- ^ API key
     -> String
-    -- ^ The token you are verifying.
+    -- ^ The token you are verifying
     -> String
-    -- ^ The Authy ID that was sent back when registering the users device.
+    -- ^ The Authy ID that was sent back when registering the users device
     -> Bool
-    -- ^ Force token verification on unregistered user.
+    -- ^ Force token verification on unregistered user
     -> IO (Either String Bool)
-    -- ^ Either an error message or a Boolean indicating whether the token is valid.
+    -- ^ Either an error message or a Boolean indicating whether the token is valid
 verify server key token authyID force =
     curlAeson verifyResponseParser "GET" url [CurlFailOnError False] noData
     where
