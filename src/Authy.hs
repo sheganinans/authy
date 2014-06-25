@@ -38,7 +38,7 @@ newUserResponseParser = withObject "new user response" $ \obj -> do
         "false" -> do
             message <- obj  .: "message"
             errors  <- obj  .: "errors"  :: Parser Object
-            let invalid = [unpack key | (key, valid) <- zip keys (map (flip HM.member errors) keys), valid]
+            let invalid = [unpack key | (key, valid) <- zip keys (map (`HM.member` errors) keys), valid]
             return $ Left (message, invalid)
         _       -> return $ Left ("The 'impossible' happened: Unknown value for key 'success': '" ++ success ++ "'", [])
     where
