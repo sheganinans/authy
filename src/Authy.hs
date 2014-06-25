@@ -8,10 +8,10 @@ module Authy
     , sandboxServer
     ) where
 
-import           Data.Aeson            ((.:), Object, Value(..), withObject)
+import           Data.Aeson            ((.:), (.:?), Object, Value(..), withObject)
 import           Data.Aeson.Types      (Parser)
 import qualified Data.HashMap.Strict   as HM
-import           Data.Text             (unpack)
+import           Data.Text             (Text, unpack)
 import           Network.Curl.Aeson    (curlAeson, noData)
 import           Network.Curl.Opts     (CurlOption(..))
 
@@ -70,16 +70,15 @@ newUser server key email cellPhone countryCode =
 -------------------------------------------------------------------------------
 
 verifyResponseParser :: Value -> Parser (Either String Bool)
-verifyResponseParser = withObject "VerifyResponse" $ \obj -> do
-    success <- obj  .: "success"
-    case success of
-        "true"  -> return $ Right True
-        "false" -> do
+verifyResponseParser = withObject "verify response" $ \obj -> do
+    token <- obj .:? "token" :: Parser (Maybe Text)
+    case token of
+        Just "is valid" -> return $ Right True
+        _ -> do
             message <- obj .: "message"
-            case message of
-                "token is invalid" -> return $ Right False
-                _                  -> return $ Left message
-        _       -> return $ Left $ "The 'impossible' happened: Unknown value for key 'success': '" ++ success ++ "'"
+            return $ if message == "token is invalid"
+                         then Right False
+                         else Left message
 
 -- | Verify a user token.
 verify
