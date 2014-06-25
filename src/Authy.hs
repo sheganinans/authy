@@ -31,16 +31,15 @@ newUserResponseParser :: Value -> Parser (Either (String, [String]) Int)
 newUserResponseParser = withObject "new user response" $ \obj -> do
     success <- obj  .: "success"
     case success of
-        "true"  -> do
+        True  -> do
             user    <- obj  .: "user"
             user_id <- user .: "id"
             return $ Right user_id
-        "false" -> do
+        False -> do
             message <- obj  .: "message"
             errors  <- obj  .: "errors"  :: Parser Object
             let invalid = [unpack key | (key, valid) <- zip keys (map (`HM.member` errors) keys), valid]
             return $ Left (message, invalid)
-        _       -> return $ Left ("The 'impossible' happened: Unknown value for key 'success': '" ++ success ++ "'", [])
     where
         keys = ["email", "cellphone", "country_code"]
 
