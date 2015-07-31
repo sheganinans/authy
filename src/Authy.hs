@@ -53,7 +53,7 @@ newUser
     -- ^ E-mail address
     -> String
     -- ^ Cell phone. Used by the API to match the user
-    -> Int
+    -> String
     -- ^ Numeric calling country code of the country. E.g. 1 for the US, 91 for India, or 54 for Mexico
     -> IO (Either (String, [String]) Int)
     -- ^ Either an (error message, list of invalid parameters) pair or a user ID
@@ -63,7 +63,7 @@ newUser server key email cellPhone countryCode =
     where
         formData = ["user[email]=" ++ email
                    ,"user[cellphone]=" ++ cellPhone
-                   ,"user[country_code]=" ++ show countryCode]
+                   ,"user[country_code]=" ++ countryCode]
         path     = "/protected/json/users/new?api_key=" ++ key
 
 
